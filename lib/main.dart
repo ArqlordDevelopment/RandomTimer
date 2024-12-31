@@ -3,7 +3,7 @@ import 'screen/RandomAlarmScreen.dart';
 import 'screen/RandomTimerScreen.dart';
 
 void main() {
-  runApp(RandomAlarmTimerApp());
+  runApp(const RandomAlarmTimerApp());
 }
 
 class RandomAlarmTimerApp extends StatelessWidget {
@@ -45,7 +45,6 @@ class RandomAlarmTimerApp extends StatelessWidget {
 
 class MainScreen extends StatelessWidget {
   const MainScreen({super.key});
-
 
   @override
   Widget build(BuildContext context) {
@@ -91,7 +90,8 @@ class MainScreen extends StatelessWidget {
             body: const TabBarView(
               children: [
                 RandomAlarmScreen(),
-                RandomTimerScreen(),]
+                RandomTimerScreen(),
+              ],
             ),
           ),
         ],
@@ -99,4 +99,3 @@ class MainScreen extends StatelessWidget {
     );
   }
 }
-

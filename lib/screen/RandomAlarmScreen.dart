@@ -2,7 +2,10 @@ import 'package:flutter/material.dart';
 import 'dart:math';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:timezone/timezone.dart' as tz;
+import 'package:timezone/data/latest.dart' as tz_data;
 import 'dart:async';
+import 'package:permission_handler/permission_handler.dart';
+import 'package:numberpicker/numberpicker.dart';
 
 class RandomAlarmScreen extends StatefulWidget {
   const RandomAlarmScreen({super.key});
@@ -15,31 +18,31 @@ class _RandomAlarmScreenState extends State<RandomAlarmScreen>
     with SingleTickerProviderStateMixin {
   TimeOfDay? _startTime;
   TimeOfDay? _endTime;
-  final _alarmsController = TextEditingController();
   final FlutterLocalNotificationsPlugin _notificationsPlugin =
       FlutterLocalNotificationsPlugin();
   bool _isAlarmStarted = false; // Tracks alarm state
   late AnimationController _animationController;
+  int _selectedAlarmsCount = 1; // Default value for the number of alarms
 
   @override
   void initState() {
     super.initState();
+    tz_data.initializeTimeZones(); // Initialize timezone database
     _initializeNotifications();
 
     // Initialize animation controller
     _animationController = AnimationController(
       vsync: this,
-      duration: const Duration(milliseconds: 500),
-    )..addStatusListener((status) {
-        if (status == AnimationStatus.completed) {
-          _animationController.reverse();
-        } else if (status == AnimationStatus.dismissed) {
-          _animationController.forward();
-        }
-      });
+      duration: const Duration(milliseconds: 300),
+    );
   }
 
   void _initializeNotifications() async {
+    // Request notification permissions
+    if (await Permission.notification.isDenied) {
+      await Permission.notification.request();
+    }
+
     const androidSettings = AndroidInitializationSettings('@mipmap/ic_launcher');
     const initializationSettings = InitializationSettings(android: androidSettings);
 
@@ -61,7 +64,10 @@ class _RandomAlarmScreenState extends State<RandomAlarmScreen>
     final androidFlutterPlugin = _notificationsPlugin
         .resolvePlatformSpecificImplementation<
             AndroidFlutterLocalNotificationsPlugin>();
-    await androidFlutterPlugin?.createNotificationChannel(androidChannel);
+
+    if (androidFlutterPlugin != null) {
+      await androidFlutterPlugin.createNotificationChannel(androidChannel);
+    }
   }
 
   Future<void> _selectStartTime() async {
@@ -107,14 +113,6 @@ class _RandomAlarmScreenState extends State<RandomAlarmScreen>
         return;
       }
 
-      final alarmCount = int.tryParse(_alarmsController.text);
-      if (alarmCount == null || alarmCount <= 0) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Please enter a valid number of alarms.')),
-        );
-        return;
-      }
-
       final startMinutes = _startTime!.hour * 60 + _startTime!.minute;
       final endMinutes = _endTime!.hour * 60 + _endTime!.minute;
 
@@ -129,7 +127,7 @@ class _RandomAlarmScreenState extends State<RandomAlarmScreen>
         _isAlarmStarted = true;
       });
 
-      _startRandomAlarms(startMinutes, endMinutes, alarmCount);
+      _startRandomAlarms(startMinutes, endMinutes, _selectedAlarmsCount);
     }
   }
 
@@ -190,8 +188,13 @@ class _RandomAlarmScreenState extends State<RandomAlarmScreen>
           UILocalNotificationDateInterpretation.absoluteTime,
     );
 
-    // Start animation when alarm is triggered
-    _animationController.forward();
+    // Trigger the animation when the alarm is scheduled
+    Timer(scheduleTime.difference(DateTime.now()), () {
+      _animationController.repeat(reverse: true);
+      Timer(const Duration(seconds: 3), () {
+        _animationController.stop();
+      });
+    });
   }
 
   @override
@@ -216,8 +219,20 @@ class _RandomAlarmScreenState extends State<RandomAlarmScreen>
             child: Column(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                ScaleTransition(
-                  scale: Tween(begin: 1.0, end: 1.2).animate(_animationController),
+                AnimatedBuilder(
+                  animation: _animationController,
+                  builder: (context, child) {
+                    return Transform.scale(
+                      scale: 1 + (_animationController.value * 0.2),
+                      child: Transform.translate(
+                        offset: Offset(
+                          _animationController.value * 10,
+                          0,
+                        ),
+                        child: child,
+                      ),
+                    );
+                  },
                   child: const Icon(Icons.alarm, size: 100, color: Colors.white),
                 ),
                 const SizedBox(height: 20),
@@ -251,15 +266,49 @@ class _RandomAlarmScreenState extends State<RandomAlarmScreen>
                   ],
                 ),
                 const SizedBox(height: 20),
-                Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 32.0),
-                  child: TextField(
-                    controller: _alarmsController,
-                    decoration: const InputDecoration(
-                      labelText: 'Number of Alarms',
+                Column(
+                  children: [
+                    const Text(
+                      'Number of Alarms',
+                      style: TextStyle(color: Colors.white, fontSize: 16),
                     ),
-                    keyboardType: TextInputType.number,
-                  ),
+                    const SizedBox(height: 8),
+                    Container(
+                      decoration: BoxDecoration(
+                        color: Colors.black,
+                        borderRadius: BorderRadius.circular(10),
+                        border: Border.all(color: Colors.white, width: 1),
+                      ),
+                      padding: const EdgeInsets.all(8.0),
+                      child: NumberPicker(
+                        value: _selectedAlarmsCount,
+                        minValue: 1,
+                        maxValue: 5,
+                        step: 1,
+                        axis: Axis.horizontal,
+                        selectedTextStyle: const TextStyle(
+                          fontSize: 24,
+                          fontWeight: FontWeight.bold,
+                          color: Colors.white,
+                        ),
+                        textStyle: const TextStyle(
+                          fontSize: 16,
+                          color: Colors.white70,
+                        ),
+                        decoration: BoxDecoration(
+                          border: Border(
+                            left: BorderSide(color: Colors.white, width: 1),
+                            right: BorderSide(color: Colors.white, width: 1),
+                          ),
+                        ),
+                        onChanged: (value) {
+                          setState(() {
+                            _selectedAlarmsCount = value;
+                          });
+                        },
+                      ),
+                    ),
+                  ],
                 ),
                 const SizedBox(height: 20),
                 ElevatedButton(
