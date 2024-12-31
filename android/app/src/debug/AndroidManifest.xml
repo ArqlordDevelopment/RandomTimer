@@ -1,0 +1,55 @@
+<manifest xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    package="com.example.random_alarm_timer">
+
+
+      <uses-permission android:name="android.permission.RECEIVE_BOOT_COMPLETED"/>
+   <uses-permission android:name="android.permission.VIBRATE" />
+   <uses-permission android:name="android.permission.USE_FULL_SCREEN_INTENT" />
+   <!-- NOTE: the example app requests USE_EXACT_ALARM to make it easier to run the app.
+        Developers will need to check if their own app needs to use SCHEDULE_EXACT_ALARM instead -->
+   <uses-permission android:name="android.permission.USE_EXACT_ALARM" />
+   <uses-permission android:name="android.permission.POST_NOTIFICATIONS"/>
+   <uses-permission android:name="android.permission.FOREGROUND_SERVICE" />
+   <!-- NOTE: Special use was selected as it's the closest match for this example app.
+        apps should specify the appropriate permission for their use cases. -->
+   <uses-permission android:name="android.permission.FOREGROUND_SERVICE_SPECIAL_USE" />
+
+   <application
+    android:label="Random Alarm Timer"
+    tools:replace="android:label"
+    android:icon="@mipmap/ic_launcher"
+    android:allowBackup="true">
+
+        <meta-data
+            android:name="flutterEmbedding"
+            android:value="2" />
+
+        <!-- Main Activity -->
+        <activity
+            android:name=".MainActivity"
+            android:exported="true"
+            android:launchMode="singleTop"
+            android:configChanges="orientation|keyboardHidden|keyboard|screenSize|smallestScreenSize|locale|layoutDirection|fontScale|screenLayout|density|uiMode"
+            android:hardwareAccelerated="true"
+            android:windowSoftInputMode="adjustResize">
+            
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+                <category android:name="android.intent.category.LAUNCHER" />
+            </intent-filter>
+        </activity>
+        <!-- Boot Receiver -->
+         <receiver android:exported="false" android:name="com.dexterous.flutterlocalnotifications.ActionBroadcastReceiver" />
+        <receiver android:exported="false" android:name="com.dexterous.flutterlocalnotifications.ScheduledNotificationReceiver" />
+        <receiver android:exported="false" android:name="com.dexterous.flutterlocalnotifications.ScheduledNotificationBootReceiver">
+            <intent-filter>
+                <action android:name="android.intent.action.BOOT_COMPLETED"/>
+                <action android:name="android.intent.action.MY_PACKAGE_REPLACED"/>
+                <action android:name="android.intent.action.QUICKBOOT_POWERON" />
+                <action android:name="com.htc.intent.action.QUICKBOOT_POWERON"/>
+            </intent-filter>
+        </receiver>
+    </application>
+
+</manifest>
