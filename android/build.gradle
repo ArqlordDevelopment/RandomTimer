@@ -16,3 +16,19 @@ subprojects {
 tasks.register("clean", Delete) {
     delete rootProject.buildDir
 }
+
+// Ensure Gradle and Kotlin compatibility
+buildscript {
+    ext {
+        // Update Gradle and Kotlin versions as per Flutter's recommendation
+        kotlin_version = "1.8.20"
+    }
+    repositories {
+        google() 
+        mavenCentral()
+    }
+    dependencies {
+        classpath 'com.android.tools.build:gradle:8.2.1'
+        classpath "org.jetbrains.kotlin:kotlin-gradle-plugin:$kotlin_version"
+    }
+}

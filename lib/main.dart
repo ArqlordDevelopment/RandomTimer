@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'screen/RandomAlarmScreen.dart';
 import 'screen/RandomTimerScreen.dart';
+import 'screen/ContactScreen.dart'; // Import the ContactScreen
 
 void main() {
   runApp(const RandomAlarmTimerApp());
@@ -39,6 +40,9 @@ class RandomAlarmTimerApp extends StatelessWidget {
         ),
       ),
       home: const MainScreen(),
+      routes: {
+        '/contact': (context) => ContactScreen(), // Define the Contact Page route
+      },
     );
   }
 }
@@ -77,6 +81,15 @@ class MainScreen extends StatelessWidget {
                   color: Colors.white, // White header font
                 ),
               ),
+              actions: [
+                IconButton(
+                  onPressed: () {
+                    Navigator.pushNamed(context, '/contact'); // Navigate to ContactScreen
+                  },
+                  icon: const Icon(Icons.contact_page, color: Colors.white),
+                  tooltip: 'Contact Us',
+                ),
+              ],
               bottom: const TabBar(
                 indicatorColor: Colors.white, // White underline for active tab
                 labelColor: Colors.white, // White text for selected tab
